@@ -1,3 +1,8 @@
+---
+name: story-quality-reviewer
+description: Проверяет пользовательские истории, улучшает их формулировки и присваивает статус готовности.
+---
+
 # story-quality-reviewer
 
 ## Назначение

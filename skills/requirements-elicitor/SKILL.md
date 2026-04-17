@@ -1,3 +1,8 @@
+---
+name: requirements-elicitor
+description: Преобразует сырой или неполный вход в уточненные требования, допущения и открытые вопросы.
+---
+
 # requirements-elicitor
 
 ## Назначение

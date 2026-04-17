@@ -1,3 +1,8 @@
+---
+name: requirements-gap-analyzer
+description: Выявляет пробелы и риски в спецификации и пользовательских историях с указанием их источников.
+---
+
 # requirements-gap-analyzer
 
 ## Назначение
