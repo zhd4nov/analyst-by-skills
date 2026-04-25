@@ -15,8 +15,10 @@
 - `artifact-persistence-agent` сохраняет `Вход` до первого профильного скилла и фиксирует новые или обновленные артефакты после каждого этапа
 - `traceability-auditor-agent` проверяет трассируемость перед downstream-переходами и перед финальной агрегацией
 - `routing-guardian-agent` проверяет допустимость каждого предложенного перехода и финальной агрегации
-- каждый вызов `traceability-auditor-agent` должен завершаться сохранением `traceability-audit.md` через `artifact-persistence-agent`
-- каждый вызов `routing-guardian-agent` должен завершаться сохранением `routing-decision.md` через `artifact-persistence-agent`
+- первый вызов `artifact-persistence-agent` выполняется в режиме `create_run`, сохраняет `product/input.md` и возвращает `current_run_path`
+- все последующие вызовы `artifact-persistence-agent` выполняются в режиме `update_run` с тем же `current_run_path`
+- каждый вызов `traceability-auditor-agent` должен завершаться сохранением `service/traceability-audit.md` через `artifact-persistence-agent`
+- каждый вызов `routing-guardian-agent` должен завершаться сохранением `service/routing-decision.md` через `artifact-persistence-agent`
 - переход к следующему профильному этапу разрешен только после успешной файловой фиксации измененных артефактов, `passed` от обязательного аудита трассируемости и `allow` от контроля маршрута
 
 Минимальный набор итоговых файлов полного прогона:
@@ -33,9 +35,9 @@
 - `service/traceability-audit.md`
 - `service/routing-decision.md`
 
-Сценарии ниже могут не повторять одинаковую пару "служебный агент -> сохранение его отчета" после каждого этапа, но это не сокращает контракт: все новые и обновленные продуктовые артефакты должны быть зафиксированы в `product/`, а `service/traceability-audit.md` и `service/routing-decision.md` должны быть сохранены до следующего профильного шага.
+Сценарии ниже считаются валидными только при выполнении всех служебных стыков: новые и обновленные продуктовые артефакты фиксируются в `product/`, каждый аудит фиксируется в `service/traceability-audit.md`, каждый контроль маршрута фиксируется в `service/routing-decision.md`, а переход к следующему профильному этапу выполняется только после этих фиксаций.
 
-`canonical-rules.md` ожидается как проверяемый артефакт во всех сценариях, где сформированы или доступны `Канонические правила`. Если маршрут начинается с достаточно полного входа и правила не выделялись отдельным слоем, аудит трассируемости должен явно зафиксировать, что `canonical-rules.md` не применялся на этом прогоне, а downstream-этапы не достраивали факты из непроверенного пересказа.
+`product/canonical-rules.md` ожидается как проверяемый артефакт во всех сценариях, где сформированы или доступны `Канонические правила`. Если маршрут начинается с достаточно полного входа и правила не выделялись отдельным слоем, аудит трассируемости должен явно зафиксировать, что `product/canonical-rules.md` не применялся на этом прогоне, а downstream-этапы не достраивали факты из непроверенного пересказа.
 
 ---
 
@@ -48,29 +50,41 @@
 - "Нужно сделать нормальный процесс согласования командировок, чтобы было быстрее и без писем."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `requirements-elicitor`
-3. `artifact-persistence-agent` сохраняет `Лог уточнений`, `Уточненные требования`, `Канонические правила`, `Допущения`, `Открытые вопросы`
+3. `artifact-persistence-agent` в режиме `update_run` сохраняет `product/clarification-log.md`, `product/clarified-requirements.md`, `product/canonical-rules.md`, `product/assumptions.md`, `product/open-questions.md`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+5. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет переход к `spec-structurer`
-7. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+7. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/routing-decision.md`
 8. `spec-structurer`
-9. `traceability-auditor-agent`
-10. `routing-guardian-agent` проверяет переход к `story-extractor`
-11. `story-extractor`
-12. `traceability-auditor-agent`
-13. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
-14. `story-quality-reviewer`
-15. `traceability-auditor-agent`
-16. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
-17. `requirements-gap-analyzer`
-18. `traceability-auditor-agent`
-19. `routing-guardian-agent` проверяет финальную агрегацию
+9. `artifact-persistence-agent` в режиме `update_run` сохраняет `product/specification.md`
+10. `traceability-auditor-agent`
+11. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/traceability-audit.md`
+12. `routing-guardian-agent` проверяет переход к `story-extractor`
+13. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/routing-decision.md`
+14. `story-extractor`
+15. `artifact-persistence-agent` в режиме `update_run` сохраняет `product/user-stories.md`
+16. `traceability-auditor-agent`
+17. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/traceability-audit.md`
+18. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
+19. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/routing-decision.md`
+20. `story-quality-reviewer`
+21. `artifact-persistence-agent` в режиме `update_run` сохраняет `product/story-readiness.md`
+22. `traceability-auditor-agent`
+23. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/traceability-audit.md`
+24. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
+25. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/routing-decision.md`
+26. `requirements-gap-analyzer`
+27. `artifact-persistence-agent` в режиме `update_run` сохраняет `product/gap-risk-report.md`
+28. `traceability-auditor-agent`
+29. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/traceability-audit.md`
+30. `routing-guardian-agent` проверяет финальную агрегацию
+31. `artifact-persistence-agent` в режиме `update_run` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - полный набор файлов прогона
-- `Канонические правила`
+- `product/canonical-rules.md`
 - `Отчет аудита трассируемости` со статусом `passed`
 - `Отчет контроля маршрута` с итоговым `allow`
 
@@ -88,13 +102,13 @@
 - "На встрече решили, что клиент должен видеть статус возврата, склад меняет статус вручную, а поддержка не должна отвечать на типовые вопросы по возврату."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `spec-structurer`
 3. `artifact-persistence-agent` сохраняет `Спецификация` и сопутствующие артефакты
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет переход к `story-extractor`
-7. `artifact-persistence-agent` сохраняет `routing-decision.md`
+7. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 8. `story-extractor`
 9. `traceability-auditor-agent`
 10. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
@@ -113,7 +127,7 @@
 - `Отчет о пробелах и рисках`
 - `service/traceability-audit.md`
 - `service/routing-decision.md`
-- `canonical-rules.md`, если на этапе структурирования были выделены операциональные правила
+- `product/canonical-rules.md`, если на этапе структурирования были выделены операциональные правила
 
 ### Ключевое правило
 - Если вход уже содержит акторов, проблему и основной сценарий, оркестратор может не вызывать `requirements-elicitor` первым шагом, но служебные проверки и фиксация остаются обязательными.
@@ -129,31 +143,31 @@
 - "Есть клиент, оператор склада и система возвратов. Клиент должен видеть актуальный статус возврата. Статусы приходят из складской системы. Частичный возврат пока не поддерживаем."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `spec-structurer`
 3. `artifact-persistence-agent` сохраняет `Спецификация` и сопутствующие артефакты
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет переход к `story-extractor`
-7. `artifact-persistence-agent` сохраняет `routing-decision.md`
+7. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 8. `story-extractor`
 9. `artifact-persistence-agent` сохраняет `Пользовательские истории`
 10. `traceability-auditor-agent`
-11. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+11. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 12. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
-13. `artifact-persistence-agent` сохраняет `routing-decision.md`
+13. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 14. `story-quality-reviewer`
 15. `artifact-persistence-agent` сохраняет `Статус готовности историй`
 16. `traceability-auditor-agent`
-17. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+17. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 18. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
-19. `artifact-persistence-agent` сохраняет `routing-decision.md`
+19. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 20. `requirements-gap-analyzer`
 21. `artifact-persistence-agent` сохраняет `Отчет о пробелах и рисках`
 22. `traceability-auditor-agent`
-23. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+23. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 24. `routing-guardian-agent` проверяет финальную агрегацию
-25. `artifact-persistence-agent` сохраняет `routing-decision.md`
+25. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - `Вход`
@@ -161,9 +175,9 @@
 - `Пользовательские истории`
 - `Статус готовности историй`
 - `Отчет о пробелах и рисках`
-- `traceability-audit.md`
-- `routing-decision.md`
-- `canonical-rules.md`, если вход или `spec-structurer` выделил операциональные правила; иначе явная отметка аудита, что слой не применялся
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
+- `product/canonical-rules.md`, если вход или `spec-structurer` выделил операциональные правила; иначе явная отметка аудита, что слой не применялся
 
 ### Ключевое правило
 - Если вход уже похож на спецификацию, оркестратор должен нормализовать и структурировать его, а не возвращаться к полному elicitation без причины.
@@ -179,7 +193,7 @@
 - "Как менеджер, я хочу экспортировать заявки, чтобы работать удобнее."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `requirements-elicitor`
 3. `artifact-persistence-agent` сохраняет `Уточненные требования`, `Канонические правила`, `Открытые вопросы`
 4. `traceability-auditor-agent`
@@ -199,9 +213,9 @@
 
 ### Ожидаемые артефакты
 - полный набор файлов прогона
-- `Канонические правила`
-- `traceability-audit.md`
-- `routing-decision.md`
+- `product/canonical-rules.md`
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
 
 ### Ключевое правило
 - Одна история не заменяет требования целиком. Если не определены контекст, границы и бизнес-цель, оркестратор должен вернуться к началу и восстановить фундамент.
@@ -217,27 +231,50 @@
 - "Клиент должен сам отменять возврат. Возврат после отправки на склад отменять нельзя. Нужен экран возвратов и экспорт."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `requirements-elicitor`
 3. `artifact-persistence-agent` сохраняет `Лог уточнений`, `Уточненные требования`, `Канонические правила`, `Допущения` и `Открытые вопросы`
 4. если нужен ответ пользователя: `routing-guardian-agent` блокирует переход к `spec-structurer`
-5. `artifact-persistence-agent` сохраняет `routing-decision.md` со статусом `block`, пайплайн останавливается
+5. `artifact-persistence-agent` сохраняет `service/routing-decision.md` со статусом `block`, пайплайн останавливается
 6. после закрытия блокеров: `requirements-elicitor` обновляет уточненные артефакты
 7. `artifact-persistence-agent` сохраняет обновленные артефакты
 8. `traceability-auditor-agent`
-9. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+9. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 10. `routing-guardian-agent` проверяет переход к `spec-structurer`
-11. `artifact-persistence-agent` сохраняет `routing-decision.md` со статусом `allow`
-12. далее полный downstream-маршрут: `spec-structurer` -> аудит -> контроль маршрута -> `story-extractor` -> аудит -> контроль маршрута -> `story-quality-reviewer` -> аудит -> контроль маршрута -> `requirements-gap-analyzer` -> финальный аудит -> контроль финальной агрегации
+11. `artifact-persistence-agent` сохраняет `service/routing-decision.md` со статусом `allow`
+12. `spec-structurer`
+13. `artifact-persistence-agent` сохраняет `product/specification.md`
+14. `traceability-auditor-agent`
+15. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+16. `routing-guardian-agent` проверяет переход к `story-extractor`
+17. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+18. `story-extractor`
+19. `artifact-persistence-agent` сохраняет `product/user-stories.md`
+20. `traceability-auditor-agent`
+21. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+22. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
+23. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+24. `story-quality-reviewer`
+25. `artifact-persistence-agent` сохраняет `product/story-readiness.md`
+26. `traceability-auditor-agent`
+27. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+28. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
+29. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+30. `requirements-gap-analyzer`
+31. `artifact-persistence-agent` сохраняет `product/gap-risk-report.md`
+32. `traceability-auditor-agent`
+33. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+34. `routing-guardian-agent` проверяет финальную агрегацию
+35. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - `Вход`
 - `Лог уточнений`
 - `Уточненные требования`
-- `Канонические правила`
+- `product/canonical-rules.md`
 - `Открытые вопросы`, если конфликт нельзя закрыть без пользователя
-- `traceability-audit.md`
-- `routing-decision.md`
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
 - финальные артефакты только после закрытия блокеров
 
 ### Ключевое правило
@@ -255,52 +292,52 @@
 - "US-11: Настройка фильтров"
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `story-quality-reviewer`
 3. `artifact-persistence-agent` сохраняет `Статус готовности историй` и `Открытые вопросы`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет предложенный downstream-переход к `requirements-gap-analyzer`
 7. если истории имеют низкую готовность из-за слабого фундамента: `routing-guardian-agent` возвращает `block` для downstream-перехода к `requirements-gap-analyzer`
-8. `artifact-persistence-agent` сохраняет `routing-decision.md`
+8. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 9. оркестратор выбирает восстановительный переход к `spec-structurer` или `requirements-elicitor` в зависимости от того, хватает ли входа для спецификации
 10. `routing-guardian-agent` проверяет восстановительный переход
-11. `artifact-persistence-agent` сохраняет `routing-decision.md`
+11. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 12. `spec-structurer` или `requirements-elicitor`
 13. `artifact-persistence-agent` сохраняет восстановленные артефакты, включая `Спецификация` и `Канонические правила`, если они сформированы
 14. `traceability-auditor-agent`
-15. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+15. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 16. `routing-guardian-agent` проверяет переход к `story-extractor`
-17. `artifact-persistence-agent` сохраняет `routing-decision.md`
+17. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 18. `story-extractor`
 19. `artifact-persistence-agent` сохраняет обновленные `Пользовательские истории`
 20. `traceability-auditor-agent`
-21. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+21. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 22. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
-23. `artifact-persistence-agent` сохраняет `routing-decision.md`
+23. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 24. `story-quality-reviewer`
 25. `artifact-persistence-agent` сохраняет итоговый `Статус готовности историй`
 26. `traceability-auditor-agent`
-27. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+27. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 28. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
-29. `artifact-persistence-agent` сохраняет `routing-decision.md`
+29. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 30. `requirements-gap-analyzer`
 31. `artifact-persistence-agent` сохраняет `Отчет о пробелах и рисках`
 32. `traceability-auditor-agent`
-33. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+33. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 34. `routing-guardian-agent` проверяет финальную агрегацию
-35. `artifact-persistence-agent` сохраняет `routing-decision.md`
+35. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - `Вход`
 - промежуточный `Статус готовности историй`
 - `Открытые вопросы`
-- `routing-decision.md` с блокировкой downstream-перехода
-- `routing-decision.md` с разрешением восстановительного перехода
+- `service/routing-decision.md` с блокировкой downstream-перехода
+- `service/routing-decision.md` с разрешением восстановительного перехода
 - при возврате назад: `Спецификация`
-- `Канонические правила`, если фундамент восстановлен через уточнение требований
+- `product/canonical-rules.md`, если фундамент восстановлен через уточнение требований
 - обновленные `Пользовательские истории`
-- `traceability-audit.md`
+- `service/traceability-audit.md`
 - `Отчет о пробелах и рисках`
 
 ### Ключевое правило
@@ -317,32 +354,49 @@
 - "Пользователь должен видеть статус цели и процент прогресса. Еще нужны статусы `не начата`, `в процессе`, `на паузе`, `просрочена`, `завершена`."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `spec-structurer`
 3. `artifact-persistence-agent` сохраняет промежуточную `Спецификацию` и новые `Открытые вопросы`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет предложенный переход к `story-extractor`
 7. если появились новые критичные `Открытые вопросы`: `routing-guardian-agent` возвращает `block`
-8. `artifact-persistence-agent` сохраняет `routing-decision.md`
+8. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 9. `requirements-elicitor` пытается закрыть новые вопросы
 10. `artifact-persistence-agent` сохраняет обновленные `Лог уточнений`, `Уточненные требования`, `Канонические правила` и `Открытые вопросы`
 11. после закрытия вопросов: повторный вызов `spec-structurer`
 12. `artifact-persistence-agent` сохраняет итоговую `Спецификация`
 13. `traceability-auditor-agent`
-14. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+14. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 15. `routing-guardian-agent` возвращает `allow` для перехода к `story-extractor`
-16. `artifact-persistence-agent` сохраняет `routing-decision.md`
-17. далее полный downstream-маршрут: `story-extractor` -> аудит -> контроль маршрута -> `story-quality-reviewer` -> аудит -> контроль маршрута -> `requirements-gap-analyzer` -> финальный аудит -> контроль финальной агрегации
+16. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+17. `story-extractor`
+18. `artifact-persistence-agent` сохраняет `product/user-stories.md`
+19. `traceability-auditor-agent`
+20. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+21. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
+22. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+23. `story-quality-reviewer`
+24. `artifact-persistence-agent` сохраняет `product/story-readiness.md`
+25. `traceability-auditor-agent`
+26. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+27. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
+28. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+29. `requirements-gap-analyzer`
+30. `artifact-persistence-agent` сохраняет `product/gap-risk-report.md`
+31. `traceability-auditor-agent`
+32. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+33. `routing-guardian-agent` проверяет финальную агрегацию
+34. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - промежуточная `Спецификация`
 - новые `Открытые вопросы`
-- `routing-decision.md` со статусом `block`, затем `allow`
+- `service/routing-decision.md` со статусом `block`, затем `allow`
 - обновленные `Уточненные требования`
-- обновленные `Канонические правила`, если вопросы закрыты новыми правилами
+- обновленный `product/canonical-rules.md`, если вопросы закрыты новыми правилами
 - итоговая `Спецификация`
-- `traceability-audit.md`
+- `service/traceability-audit.md`
 - финальные артефакты полного прогона
 
 ### Ключевое правило
@@ -359,39 +413,50 @@
 - "Пользователь может настроить уведомления. Система должна поддерживать уведомления по важным событиям."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `spec-structurer`
 3. `artifact-persistence-agent` сохраняет `Спецификация`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет переход к `story-extractor`
-7. `artifact-persistence-agent` сохраняет `routing-decision.md`
+7. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 8. `story-extractor`
 9. `artifact-persistence-agent` сохраняет промежуточные `Пользовательские истории` и новые `Открытые вопросы`
 10. `traceability-auditor-agent`
-11. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+11. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 12. `routing-guardian-agent` проверяет предложенный переход к `story-quality-reviewer`
 13. если появились новые критичные `Открытые вопросы`: `routing-guardian-agent` возвращает `block`
-14. `artifact-persistence-agent` сохраняет `routing-decision.md`
+14. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 15. `requirements-elicitor` пытается закрыть вопросы
 16. `artifact-persistence-agent` сохраняет обновленные `Лог уточнений`, `Уточненные требования`, `Канонические правила` и `Открытые вопросы`
 17. после закрытия вопросов: повторный вызов `story-extractor`
 18. `artifact-persistence-agent` сохраняет итоговые `Пользовательские истории`
 19. `traceability-auditor-agent`
-20. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+20. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 21. `routing-guardian-agent` возвращает `allow` для перехода к `story-quality-reviewer`
-22. `artifact-persistence-agent` сохраняет `routing-decision.md`
-23. далее полный downstream-маршрут: `story-quality-reviewer` -> аудит -> контроль маршрута -> `requirements-gap-analyzer` -> финальный аудит -> контроль финальной агрегации
+22. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+23. `story-quality-reviewer`
+24. `artifact-persistence-agent` сохраняет `product/story-readiness.md`
+25. `traceability-auditor-agent`
+26. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+27. `routing-guardian-agent` проверяет переход к `requirements-gap-analyzer`
+28. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
+29. `requirements-gap-analyzer`
+30. `artifact-persistence-agent` сохраняет `product/gap-risk-report.md`
+31. `traceability-auditor-agent`
+32. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
+33. `routing-guardian-agent` проверяет финальную агрегацию
+34. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - `Спецификация`
 - промежуточные `Пользовательские истории`
 - новые `Открытые вопросы`
-- `routing-decision.md` со статусом `block`, затем `allow`
+- `service/routing-decision.md` со статусом `block`, затем `allow`
 - обновленные `Уточненные требования`, если вопросы удалось закрыть
-- обновленные `Канонические правила`, если вопросы закрыты новыми правилами
+- обновленный `product/canonical-rules.md`, если вопросы закрыты новыми правилами
 - итоговые `Пользовательские истории`
-- `traceability-audit.md`
+- `service/traceability-audit.md`
 - финальные артефакты полного прогона
 
 ### Ключевое правило
@@ -408,38 +473,38 @@
 - "US-11: Экспорт заявок. Менеджер экспортирует заявки. Критерий приемки: файл скачивается."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent` сохраняет `Вход`
+1. `artifact-persistence-agent` в режиме `create_run` сохраняет `product/input.md` и возвращает `current_run_path`
 2. `story-quality-reviewer`
 3. `artifact-persistence-agent` сохраняет промежуточные `Пользовательские истории`, `Статус готовности историй` и новые `Открытые вопросы`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет предложенный переход к `requirements-gap-analyzer`
 7. если появились новые критичные `Открытые вопросы`: `routing-guardian-agent` возвращает `block`
-8. `artifact-persistence-agent` сохраняет `routing-decision.md`
+8. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 9. `requirements-elicitor` пытается закрыть вопросы
 10. `artifact-persistence-agent` сохраняет обновленные `Лог уточнений`, `Уточненные требования`, `Канонические правила` и `Открытые вопросы`
 11. после закрытия вопросов: повторный вызов `story-quality-reviewer`
 12. `artifact-persistence-agent` сохраняет итоговый `Статус готовности историй`
 13. `traceability-auditor-agent`
-14. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+14. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 15. `routing-guardian-agent` возвращает `allow` для перехода к `requirements-gap-analyzer`
-16. `artifact-persistence-agent` сохраняет `routing-decision.md`
+16. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 17. `requirements-gap-analyzer`
 18. `artifact-persistence-agent` сохраняет `Отчет о пробелах и рисках`
 19. `traceability-auditor-agent`
-20. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+20. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 21. `routing-guardian-agent` проверяет финальную агрегацию
-22. `artifact-persistence-agent` сохраняет `routing-decision.md`
+22. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 
 ### Ожидаемые артефакты
 - промежуточные `Пользовательские истории`
 - `Статус готовности историй`
 - новые `Открытые вопросы`
-- `routing-decision.md` со статусом `block`, затем `allow`
+- `service/routing-decision.md` со статусом `block`, затем `allow`
 - обновленные релевантные артефакты после закрытия вопросов
-- `Канонические правила`, если вопросы закрыты новыми правилами
+- `product/canonical-rules.md`, если вопросы закрыты новыми правилами
 - итоговый `Статус готовности историй`
-- `traceability-audit.md`
+- `service/traceability-audit.md`
 - `Отчет о пробелах и рисках`
 
 ### Ключевое правило
@@ -459,10 +524,11 @@
 - "Клиент должен видеть статус возврата в личном кабинете."
 
 ### Ожидаемый маршрут
-1. `artifact-persistence-agent`
+1. `artifact-persistence-agent` в режиме `create_run`
 2. профильный скилл по состоянию входа
-3. `artifact-persistence-agent` после каждого завершенного или промежуточного этапа
-4. если были вызваны `traceability-auditor-agent` или `routing-guardian-agent`, `artifact-persistence-agent` сохраняет их отчеты как файлы текущего прогона
+3. `artifact-persistence-agent` возвращает `current_run_path`
+4. `artifact-persistence-agent` в режиме `update_run` с тем же `current_run_path` после каждого завершенного или промежуточного этапа
+5. если были вызваны `traceability-auditor-agent` или `routing-guardian-agent`, `artifact-persistence-agent` сохраняет их отчеты как файлы текущего прогона
 
 ### Ожидаемые артефакты
 - `runs/return-status-v2/product/input.md`
@@ -472,7 +538,7 @@
 - список файлов, которые еще не созданы, если соответствующие артефакты еще не начинались
 
 ### Ключевое правило
-- Если каталог задачи уже существует, `artifact-persistence-agent` обязан создать новый каталог-версию и не изменять файлы предыдущего прогона.
+- В режиме `create_run`, если каталог задачи уже существует, `artifact-persistence-agent` обязан создать новый каталог-версию. В режиме `update_run` агент обязан обновлять только переданный `current_run_path` и не создавать следующую версию.
 
 ---
 
@@ -494,12 +560,12 @@
 ### Ожидаемый маршрут
 1. `story-extractor`
 2. `traceability-auditor-agent`
-3. `artifact-persistence-agent` сохраняет `traceability-audit.md` со статусом `failed`
+3. `artifact-persistence-agent` сохраняет `service/traceability-audit.md` со статусом `failed`
 4. если аудит вернул `failed`: повторный вызов `story-extractor`
 5. после исправления: повторный вызов `traceability-auditor-agent`
-6. `artifact-persistence-agent` сохраняет `traceability-audit.md` со статусом `passed`
+6. `artifact-persistence-agent` сохраняет `service/traceability-audit.md` со статусом `passed`
 7. `routing-guardian-agent` проверяет переход к `story-quality-reviewer`
-8. `artifact-persistence-agent` сохраняет `routing-decision.md` со статусом `allow`
+8. `artifact-persistence-agent` сохраняет `service/routing-decision.md` со статусом `allow`
 9. только после `passed` и `allow`: `story-quality-reviewer`
 
 ### Ожидаемые артефакты
@@ -536,11 +602,11 @@
 1. `spec-structurer`
 2. `artifact-persistence-agent` сохраняет промежуточные артефакты
 3. `routing-guardian-agent`
-4. `artifact-persistence-agent` сохраняет `routing-decision.md` со статусом `block`
+4. `artifact-persistence-agent` сохраняет `service/routing-decision.md` со статусом `block`
 5. если контроль маршрута вернул `block`: `requirements-elicitor`
 6. после закрытия вопроса: повторный вызов `spec-structurer`
 7. повторная проверка через `routing-guardian-agent`
-8. `artifact-persistence-agent` сохраняет `routing-decision.md` со статусом `allow`
+8. `artifact-persistence-agent` сохраняет `service/routing-decision.md` со статусом `allow`
 9. только после `allow`: `story-extractor`
 
 ### Ожидаемые артефакты
