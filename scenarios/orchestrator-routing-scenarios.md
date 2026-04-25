@@ -20,20 +20,20 @@
 - переход к следующему профильному этапу разрешен только после успешной файловой фиксации измененных артефактов, `passed` от обязательного аудита трассируемости и `allow` от контроля маршрута
 
 Минимальный набор итоговых файлов полного прогона:
-- `input.md`
-- `clarification-log.md`
-- `clarified-requirements.md`
-- `canonical-rules.md`
-- `assumptions.md`
-- `open-questions.md`
-- `specification.md`
-- `user-stories.md`
-- `story-readiness.md`
-- `gap-risk-report.md`
-- `traceability-audit.md`
-- `routing-decision.md`
+- `product/input.md`
+- `product/clarification-log.md`
+- `product/clarified-requirements.md`
+- `product/canonical-rules.md`
+- `product/assumptions.md`
+- `product/open-questions.md`
+- `product/specification.md`
+- `product/user-stories.md`
+- `product/story-readiness.md`
+- `product/gap-risk-report.md`
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
 
-Сценарии ниже могут не повторять одинаковую пару "служебный агент -> сохранение его отчета" после каждого этапа, но это не сокращает контракт: все новые и обновленные продуктовые артефакты, `traceability-audit.md` и `routing-decision.md` должны быть зафиксированы до следующего профильного шага.
+Сценарии ниже могут не повторять одинаковую пару "служебный агент -> сохранение его отчета" после каждого этапа, но это не сокращает контракт: все новые и обновленные продуктовые артефакты должны быть зафиксированы в `product/`, а `service/traceability-audit.md` и `service/routing-decision.md` должны быть сохранены до следующего профильного шага.
 
 `canonical-rules.md` ожидается как проверяемый артефакт во всех сценариях, где сформированы или доступны `Канонические правила`. Если маршрут начинается с достаточно полного входа и правила не выделялись отдельным слоем, аудит трассируемости должен явно зафиксировать, что `canonical-rules.md` не применялся на этом прогоне, а downstream-этапы не достраивали факты из непроверенного пересказа.
 
@@ -52,9 +52,9 @@
 2. `requirements-elicitor`
 3. `artifact-persistence-agent` сохраняет `Лог уточнений`, `Уточненные требования`, `Канонические правила`, `Допущения`, `Открытые вопросы`
 4. `traceability-auditor-agent`
-5. `artifact-persistence-agent` сохраняет `traceability-audit.md`
+5. `artifact-persistence-agent` сохраняет `service/traceability-audit.md`
 6. `routing-guardian-agent` проверяет переход к `spec-structurer`
-7. `artifact-persistence-agent` сохраняет `routing-decision.md`
+7. `artifact-persistence-agent` сохраняет `service/routing-decision.md`
 8. `spec-structurer`
 9. `traceability-auditor-agent`
 10. `routing-guardian-agent` проверяет переход к `story-extractor`
@@ -111,8 +111,8 @@
 - `Пользовательские истории`
 - `Статус готовности историй`
 - `Отчет о пробелах и рисках`
-- `traceability-audit.md`
-- `routing-decision.md`
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
 - `canonical-rules.md`, если на этапе структурирования были выделены операциональные правила
 
 ### Ключевое правило
@@ -453,7 +453,7 @@
 - Любой вход, запускающий пайплайн требований
 
 ### Предусловие
-- В `tasks/` уже существует каталог `return-status`
+- В `runs/` уже существует каталог `return-status`
 
 ### Пример входа
 - "Клиент должен видеть статус возврата в личном кабинете."
@@ -465,10 +465,10 @@
 4. если были вызваны `traceability-auditor-agent` или `routing-guardian-agent`, `artifact-persistence-agent` сохраняет их отчеты как файлы текущего прогона
 
 ### Ожидаемые артефакты
-- `tasks/return-status-v2/input.md`
+- `runs/return-status-v2/product/input.md`
 - промежуточные или завершенные файлы артефактов текущего прогона
-- `tasks/return-status-v2/traceability-audit.md`, если был выполнен аудит трассируемости
-- `tasks/return-status-v2/routing-decision.md`, если был выполнен контроль маршрута
+- `runs/return-status-v2/service/traceability-audit.md`, если был выполнен аудит трассируемости
+- `runs/return-status-v2/service/routing-decision.md`, если был выполнен контроль маршрута
 - список файлов, которые еще не созданы, если соответствующие артефакты еще не начинались
 
 ### Ключевое правило
@@ -505,11 +505,11 @@
 ### Ожидаемые артефакты
 - промежуточные `Пользовательские истории`
 - отчет `traceability-auditor-agent` со статусом `failed`
-- `tasks/<name-of-task>/traceability-audit.md`
+- `runs/<name-of-task>/service/traceability-audit.md`
 - список нарушений трассируемости
 - доработанные `Пользовательские истории`
 - отчет `traceability-auditor-agent` со статусом `passed`
-- `tasks/<name-of-task>/routing-decision.md`
+- `runs/<name-of-task>/service/routing-decision.md`
 
 ### Ключевое правило
 - Если у истории нет источника или каноническое правило, предназначенное для историй, не покрыто, оркестратор не имеет права переходить к `story-quality-reviewer`.
@@ -547,7 +547,7 @@
 - промежуточная `Спецификация`
 - новые `Открытые вопросы`
 - решение `routing-guardian-agent` со статусом `block`
-- `tasks/<name-of-task>/routing-decision.md`
+- `runs/<name-of-task>/service/routing-decision.md`
 - обновленные артефакты после уточнения
 - решение `routing-guardian-agent` со статусом `allow`
 

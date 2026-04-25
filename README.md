@@ -98,25 +98,27 @@
 
 ## Что сохраняется
 
-Каждый прогон сохраняется в `tasks/<name-of-task>/`.
+Каждый прогон сохраняется в `runs/<name-of-task>/` с разделением на:
+- `product/` для продуктовых артефактов пайплайна
+- `service/` для служебных отчетов агентов оркестрации
 
-Минимальный набор файлов:
-- `input.md`
-- `clarification-log.md`
-- `clarified-requirements.md`
-- `canonical-rules.md`
-- `assumptions.md`
-- `open-questions.md`
-- `specification.md`
-- `user-stories.md`
-- `story-readiness.md`
-- `gap-risk-report.md`
+Минимальный набор продуктовых файлов:
+- `product/input.md`
+- `product/clarification-log.md`
+- `product/clarified-requirements.md`
+- `product/canonical-rules.md`
+- `product/assumptions.md`
+- `product/open-questions.md`
+- `product/specification.md`
+- `product/user-stories.md`
+- `product/story-readiness.md`
+- `product/gap-risk-report.md`
 
 Служебные файлы агентов:
-- `traceability-audit.md`
-- `routing-decision.md`
+- `service/traceability-audit.md`
+- `service/routing-decision.md`
 
-Если каталог задачи уже существует, `artifact-persistence-agent` должен создать новый каталог-версию рядом. Существующие каталоги в `tasks/` не переписываются.
+Если каталог задачи уже существует, `artifact-persistence-agent` должен создать новый каталог-версию рядом. Существующие каталоги в `runs/` не переписываются.
 
 ## Как использовать систему
 
@@ -124,7 +126,7 @@
 1. Передайте входной материал с требованиями.
 2. Сформулируйте, что нужен анализ требований, спецификация, истории или gap-анализ.
 3. Ответьте на уточняющие вопросы, если система остановила пайплайн.
-4. Заберите итоговые артефакты из ответа и из каталога `tasks/...`.
+4. Заберите итоговые артефакты из ответа и из каталога `runs/...`.
 
 Типичные запросы:
 - "Разбери это как требования"
@@ -143,7 +145,7 @@
 ├── scenarios/
 ├── templates/
 ├── skills/
-└── tasks/
+└── runs/
 ```
 
 Ключевые каталоги:
@@ -152,7 +154,7 @@
 - `templates/` — минимальные шаблоны артефактов
 - `scenarios/` — сценарии маршрутизации
 - `examples/` — примеры полного прохода
-- `tasks/` — сохраненные результаты прогонов
+- `runs/` — сохраненные результаты прогонов
 
 ## Режимы работы
 
