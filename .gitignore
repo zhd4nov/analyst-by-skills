@@ -1,0 +1,14 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Local virtual environments
+.venv/
+venv/
+
+# Local logs and temporary files
+*.log
+*.tmp
+
+# macOS metadata
+.DS_Store
