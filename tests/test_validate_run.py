@@ -53,8 +53,8 @@ class ValidateRunFixtureTest(unittest.TestCase):
         self.assert_errors(
             "invalid-blocked-route",
             [
-                ("service/routing-decision.md", "не найдено разрешающее маршрутное решение `Решение: allow`"),
-                ("service/routing-decision.md", "найдена блокировка маршрута"),
+                ("service/routing-decision.md", "не найдено итоговое решение маршрута `allow`"),
+                ("service/routing-decision.md", "найдены незакрытые блокировки маршрута"),
             ],
         )
 

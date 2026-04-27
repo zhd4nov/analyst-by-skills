@@ -235,10 +235,10 @@ class Validator:
     def validate_routing_decision(self) -> None:
         path = SERVICE_FILES["routing_decision"]
         text = self.read(path)
-        if "Решение: allow" not in text:
-            self.error(path, "не найдено разрешающее маршрутное решение `Решение: allow`")
-        if re.search(r"Решение:\s*block", text):
-            self.error(path, "найдена блокировка маршрута")
+        if not re.search(r"Итоговое решение маршрута:\s*allow", text):
+            self.error(path, "не найдено итоговое решение маршрута `allow`")
+        if not re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
+            self.error(path, "найдены незакрытые блокировки маршрута")
 
     def canonical_rules_for_stories(self) -> set[str]:
         text = self.read(PRODUCT_FILES["canonical_rules"])
