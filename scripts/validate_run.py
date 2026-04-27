@@ -58,6 +58,7 @@ STORY_REQUIRED_MARKERS = [
 
 GAP_REQUIRED_MARKERS = [
     "ID:",
+    "Статус пробела:",
     "Источник пробела",
     "Область:",
     "Описание пробела:",
@@ -223,6 +224,9 @@ class Validator:
             for marker in GAP_REQUIRED_MARKERS:
                 if marker not in block:
                     self.error(path, f"{gap_id}: отсутствует поле или раздел `{marker}`")
+            if self.is_open_blocking_gap(block):
+                self.error(path, f"{gap_id}: открыт блокирующий пробел")
+                self.validate_blocking_gap_story_readiness(path, gap_id, block)
 
     def validate_traceability_audit(self) -> None:
         path = SERVICE_FILES["traceability_audit"]
@@ -239,6 +243,28 @@ class Validator:
             self.error(path, "не найдено итоговое решение маршрута `allow`")
         if not re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
             self.error(path, "найдены незакрытые блокировки маршрута")
+
+    def validate_blocking_gap_story_readiness(self, path: str, gap_id: str, gap_block: str) -> None:
+        statuses = self.story_readiness_statuses()
+        for story_id in sorted(self.ids(gap_block, "US")):
+            if statuses.get(story_id) == "Высокий":
+                self.error(path, f"{gap_id}: связанная история `{story_id}` имеет статус `Высокий`")
+
+    def story_readiness_statuses(self) -> dict[str, str]:
+        text = self.read(PRODUCT_FILES["story_readiness"])
+        result = {}
+        pattern = re.compile(
+            r"(?ms)^##\s+(US-\d+)\s*$.*?Статус готовности:\s*(Высокий|Средний|Низкий)"
+        )
+        for match in pattern.finditer(text):
+            result[match.group(1)] = match.group(2)
+        return result
+
+    @staticmethod
+    def is_open_blocking_gap(block: str) -> bool:
+        blocking = re.search(r"Блокирует разработку:\s*да\b", block, re.IGNORECASE)
+        closed = re.search(r"Статус пробела:\s*закрыт\b", block, re.IGNORECASE)
+        return bool(blocking and not closed)
 
     def canonical_rules_for_stories(self) -> set[str]:
         text = self.read(PRODUCT_FILES["canonical_rules"])

@@ -58,6 +58,18 @@ class ValidateRunFixtureTest(unittest.TestCase):
             ],
         )
 
+    def test_open_blocking_gap_with_high_story_readiness_fails(self) -> None:
+        self.assert_errors(
+            "invalid-blocking-gap-high-readiness",
+            [
+                ("product/gap-risk-report.md", "GAP-01: открыт блокирующий пробел"),
+                (
+                    "product/gap-risk-report.md",
+                    "GAP-01: связанная история `US-01` имеет статус `Высокий`",
+                ),
+            ],
+        )
+
     def assert_errors(self, fixture_name: str, expected: list[tuple[str, str]]) -> None:
         findings = Validator(FIXTURES_DIR / fixture_name).validate()
         actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
