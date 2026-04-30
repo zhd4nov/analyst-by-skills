@@ -67,11 +67,15 @@
 - `Статус готовности историй` -> `product/story-readiness.md`
 - `Отчет о пробелах и рисках` -> `product/gap-risk-report.md`
 - `Kickoff brief` -> `product/kickoff-brief.md` (опционально, только после успешного завершения ядра пайплайна)
+- `Delivery readiness pack` -> `product/delivery-readiness-pack.md` (опционально, только после валидного финального комплекта)
+- `Scenario map` -> `product/scenario-map.mmd` (опционально, только как Mermaid-визуализация к delivery readiness)
+- `State model diagram` -> `product/state-model.mmd` (опционально, только если в спецификации есть подтвержденная модель состояний)
 
 `out-of-scope` решения не сохраняются отдельным файлом. Они фиксируются:
 - как источник решения в `product/clarification-log.md`, если решение получено в интервью или другом диалоге с пользователем;
 - как продуктовая граница в `product/specification.md` в разделе `Границы объема / Вне объема`;
 - как пересказ в `product/kickoff-brief.md`, только если этот опциональный файл формируется.
+- как контекст для readiness pack в `product/delivery-readiness-pack.md`, только если этот опциональный файл формируется.
 
 ## Служебные отчеты агентов
 Служебные артефакты сохраняются только в `service/`:
