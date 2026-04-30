@@ -18,7 +18,7 @@
 
 Агент нельзя запускать до обязательного предложения интервью пользователю и до отдельного явного согласия пользователя на подготовку brief.
 
-Это изолированный шаг: отсутствие запуска `kickoff-briefing-agent` не делает продуктовый результат невалидным.
+Это post-pipeline шаг: отсутствие запуска `kickoff-briefing-agent` не делает продуктовый результат невалидным, но если пользователь согласился на brief, оркестратор обязан подготовить вместе с ним `Delivery readiness pack` и применимые Mermaid-визуализации через `delivery-readiness-agent`.
 
 ---
 
@@ -97,8 +97,8 @@
 ---
 
 ## Сохранение
-`Kickoff brief` сохраняется через `artifact-persistence-agent` как дополнительный продуктовый файл:
-- `runs/<name-of-task>/product/kickoff-brief.md`
+`Kickoff brief` сохраняется через `artifact-persistence-agent` как командный файл:
+- `runs/<name-of-task>/team/kickoff-brief.md`
 
 Статус сохранения:
 - `complete`, если документ сформирован;
