@@ -62,6 +62,34 @@
 - `open_questions_updates` (если часть вопросов не закрыта)
 - `impact_map` — какие артефакты должны быть пересобраны
 
+## Схема `impact_map`
+`impact_map` описывает только необходимость пересборки артефактов после интервью. Он не является продуктовым артефактом и не заменяет решение `routing-guardian-agent`.
+
+Минимальная структура:
+
+```text
+impact_map
+source_interview_entries:
+  - CL-xx
+changes:
+  - id: IMP-01
+    decision_source: CL-xx
+    decision_type: in_scope_clarification | out_of_scope_exclusion | assumption_confirmation | open_question_update
+    affected_artifact: Лог уточнений | Допущения | Открытые вопросы | Уточненные требования | Канонические правила | Спецификация | Пользовательские истории | Статус готовности историй | Отчет о пробелах и рисках
+    affected_section: <раздел или "весь артефакт">
+    required_action: append | revise | remove_ambiguity | mark_out_of_scope | re-evaluate
+    required_skill: requirements-elicitor | spec-structurer | story-extractor | story-quality-reviewer | requirements-gap-analyzer
+    reason: <почему пересборка нужна>
+    downstream_audit_required: yes | no
+```
+
+Правила заполнения:
+- каждая запись `changes` должна ссылаться на `decision_source` из `Лога уточнений`;
+- `required_skill` указывает первый профильный этап, который должен обработать изменение;
+- если изменение влияет на downstream-артефакты, оркестратор обязан продолжить пересборку по обычным правилам маршрутизации, а не ограничиваться одним указанным артефактом;
+- для `out_of_scope_exclusion` обязательны `affected_artifact: Спецификация`, `affected_section: Границы объема / Вне объема` и `required_action: mark_out_of_scope`;
+- если агент не может определить затронутые артефакты, он должен вернуть `needs_user_answer` или явно указать неопределенность в `open_questions_updates`, а не создавать пустой `impact_map`.
+
 ## Правила интервью
 1. Каждый вопрос должен быть привязан к конкретной неоднозначности в текущих артефактах.
 2. Каждый ответ должен фиксировать: что именно стало однозначным в границах текущего scope.
