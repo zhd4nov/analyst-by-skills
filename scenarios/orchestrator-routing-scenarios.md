@@ -19,8 +19,7 @@ final traceability audit
 final routing control
 final aggregation
 mandatory offer: scope-finalizer-agent
-optional offer: kickoff brief
-if brief accepted: kickoff-briefing-agent -> delivery-readiness-agent
+automatic team package: kickoff-briefing-agent -> delivery-readiness-agent
 ```
 
 Сервисные стыки обязательны для всех применимых сценариев:
@@ -46,8 +45,8 @@ if brief accepted: kickoff-briefing-agent -> delivery-readiness-agent
 - `service/routing-decision.md`
 
 Post-pipeline артефакты:
-- `team/kickoff-brief.md` создается только после отдельного согласия пользователя на brief;
-- `team/delivery-readiness-pack.md` и `team/scenario-map.mmd` обязательны, если brief заказан;
+- `team/kickoff-brief.md` создается автоматически после отказа от интервью или после завершенного интервью с успешной повторной проверкой;
+- `team/delivery-readiness-pack.md` и `team/scenario-map.mmd` обязательны после successful brief;
 - `team/state-model.mmd` создается только если в спецификации есть подтвержденная модель состояний.
 
 ## Сценарии
@@ -67,16 +66,16 @@ Post-pipeline артефакты:
 | 11 | Аудит трассируемости блокирует переход | Артефакт без источника пройдет дальше | `traceability-auditor-agent -> failed`; route-control блокирует; артефакт возвращается профильному скиллу | Failed audit сохраняется в `service/traceability-audit.md`; downstream запрещен до passed-аудита |
 | 12 | Контроль маршрута блокирует недопустимый переход | Оркестратор сам разрешит переход без guardian | `routing-guardian-agent -> block`; выполняется требуемое действие; повторная проверка может дать `allow` | `service/routing-decision.md` отделяет историю проверок от итогового решения |
 | 13 | После успешного ядра предлагается финализирующее интервью | Интервью будет забыто | После финальной агрегации оркестратор обязан предложить `scope-finalizer-agent` | Без предложения интервью post-pipeline route невалиден |
-| 14 | Brief и delivery readiness после opt-in | Командные документы создадут без отдельного согласия | После отказа/завершения интервью оркестратор отдельно спрашивает про brief; при согласии запускает оба post-pipeline агента | `team/kickoff-brief.md`, `delivery-readiness-pack.md`, `scenario-map.mmd`, применимый `state-model.mmd` |
+| 14 | Brief и delivery readiness после финализации | Командные документы не сформируются автоматически | После отказа/завершения интервью оркестратор запускает оба post-pipeline агента без отдельного запроса на brief | `team/kickoff-brief.md`, `delivery-readiness-pack.md`, `scenario-map.mmd`, применимый `state-model.mmd` |
 | 15 | Запрос на обслуживание системы без `РЕМОНТ` | Оркестратор начнет maintenance без preflight | Задать ровно preflight-вопрос и остановиться | Никаких файловых изменений, анализа системы или maintenance-сценариев |
 | 16 | Оркестратор не предложил интервью после успешного ядра | Финальный handoff неполный | Route считается дефектным; нужно вернуться к обязательному предложению интервью | Командные документы не запускаются до корректной точки |
 | 17 | `scope-finalizer-agent` задает лишние/наводящие вопросы | Интервью расширит scope | Агент задает только вопросы с source anchor и scope effect; лишнее запрещено | Нарушение возвращается на доработку; новые пожелания фиксируются out-of-scope |
-| 18 | Командные документы запускаются без согласия | Post-pipeline подменит пользовательский opt-in | `kickoff-briefing-agent` и `delivery-readiness-agent` не вызываются | Файлы `team/` отсутствуют |
+| 18 | Командные документы запускаются до развилки интервью | Post-pipeline обойдет обязательное предложение `scope-finalizer-agent` | `kickoff-briefing-agent` и `delivery-readiness-agent` не вызываются до отказа от интервью или завершенного интервью с повторной проверкой | Файлы `team/` отсутствуют до валидной post-finalization точки |
 | 19 | `kickoff-briefing-agent` обнаружил противоречие | Brief станет новым каноном поверх конфликта | Агент возвращает `needs_orchestrator_decision`; brief не используется как финальный | `team/kickoff-brief.md` отсутствует или `incomplete`; readiness не запускается до решения |
 | 20 | Обязательный служебный агент недоступен | Оркестратор заменит контроль ручной проверкой | Pipeline останавливается с сообщением о недоступном контроле | Промежуточные артефакты сохраняются как `incomplete`, если возможно |
-| 21 | Пользователь отказался от интервью и brief | Система продолжит post-pipeline без opt-in | Core-route завершается текущими финальными артефактами | `team/kickoff-brief.md` и `team/delivery-readiness-pack.md` отсутствуют |
+| 21 | Пользователь отказался от интервью | Система завершит core-route без командного пакета | После отказа от интервью оркестратор автоматически формирует командный пакет | `team/kickoff-brief.md`, `team/delivery-readiness-pack.md`, `team/scenario-map.mmd`, применимый `team/state-model.mmd` |
 | 22 | Delivery readiness как обязательное дополнение к brief | Система завершит post-pipeline после одного brief | После successful brief обязательно вызывается `delivery-readiness-agent` | Readiness pack и Mermaid-визуализации сохраняются в `team/` |
-| 23 | Delivery readiness пытается принять технические решения | Командный pack станет backlog/API/design spec | Агент возвращается на доработку или `needs_orchestrator_decision`; технические решения удаляются, неподтвержденные элементы идут в вопросы | До исправления `team/delivery-readiness-pack.md` отсутствует или `incomplete`; `candidate` допустим только для зон работы, выведенных из требований |
+| 23 | Delivery readiness пытается принять технические решения | Командный pack станет backlog/API/design spec | Агент возвращается на доработку или `needs_orchestrator_decision`; технические решения удаляются, неподтвержденные элементы идут в вопросы | При конфликте `team/delivery-readiness-pack.md` отсутствует или `incomplete`; `candidate` допустим только для зон работы, выведенных из требований |
 
 ## Быстрые Инварианты Для Ревью
 
@@ -85,4 +84,5 @@ Post-pipeline артефакты:
 - Если route-control `block`, оркестратор выполняет требуемое действие, а не выбирает другой маршрут.
 - Если пользовательский ответ изменил требования, он попадает в `Лог уточнений` и downstream-артефакты пересобираются.
 - Если `scope-finalizer-agent` подтвердил или исключил элемент, это проходит тот же контур сохранения, пересборки, аудита и route-control.
-- Если ordered post-pipeline consent отсутствует, файлы в `team/` не создаются.
+- Если post-finalization точка еще не достигнута, файлы в `team/` не создаются.
+- Если post-finalization точка достигнута, командный пакет создается автоматически.
