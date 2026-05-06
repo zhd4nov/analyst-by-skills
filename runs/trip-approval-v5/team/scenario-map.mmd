@@ -1,0 +1,32 @@
+flowchart TD
+  Start([Начало])
+  Draft["Сотрудник: создает заявку с датами, городом, целью и бюджетом"]
+  Submit["Сотрудник: отправляет заявку руководителю"]
+  Review{"Руководитель согласует?"}
+  Approved["Заявка согласована руководителем"]
+  Rejected["Заявка отклонена руководителем с причиной"]
+  EmployeeSees["Сотрудник: видит статус заявки"]
+  Accounting["Бухгалтерия: видит согласованную заявку"]
+  DocsDone["Бухгалтерия: отмечает подготовку аванса и документов завершенной"]
+  Edit{"Сотрудник меняет даты или бюджет после отправки?"}
+  Resubmit["Заявка повторно уходит руководителю на согласование"]
+  HiddenChange["Запрет: незаметное изменение отправленной заявки"]
+  End([Процесс первой версии завершен])
+
+  Start --> Draft
+  Draft --> Submit
+  Submit --> Review
+  Review -->|да| Approved
+  Review -->|нет| Rejected
+  Rejected --> EmployeeSees
+  Approved --> EmployeeSees
+  Approved --> Accounting
+  Accounting --> DocsDone
+  DocsDone --> End
+  Submit --> Edit
+  Approved --> Edit
+  Edit -->|да| Resubmit
+  Resubmit --> Review
+  Edit -->|нет| EmployeeSees
+  Submit -.-> HiddenChange
+  Approved -.-> HiddenChange
