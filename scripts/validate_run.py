@@ -70,6 +70,14 @@ GAP_REQUIRED_MARKERS = [
     "Блокирует разработку:",
 ]
 
+SCOPE_CREEP_MARKERS = [
+    "Черновик",
+    "отзыв",
+    "отменить заявку",
+    "история изменений",
+    "руководитель выбирается",
+]
+
 
 @dataclass
 class Finding:
@@ -106,6 +114,7 @@ class Validator:
             self.validate_canonical_rules()
             self.validate_specification()
             self.validate_user_stories()
+            self.validate_scope_creep_markers()
             self.validate_story_readiness()
             self.validate_gap_report()
         if self.has_required_files(SERVICE_FILES):
@@ -200,6 +209,79 @@ class Validator:
             for cr_id in sorted(cr_to_stories):
                 if cr_id not in text:
                     self.error(path, f"правило `{cr_id}` не отражено в покрытии канонических правил")
+
+    def validate_scope_creep_markers(self) -> None:
+        input_text = self.read(PRODUCT_FILES["input"])
+        clarification_log = self.read(PRODUCT_FILES["clarification_log"])
+        for path in (PRODUCT_FILES["specification"], PRODUCT_FILES["user_stories"]):
+            self.validate_scope_creep_markers_in_artifact(
+                path,
+                self.read(path),
+                input_text,
+                clarification_log,
+            )
+
+    def validate_scope_creep_markers_in_artifact(
+        self,
+        path: str,
+        text: str,
+        input_text: str,
+        clarification_log: str,
+    ) -> None:
+        lines = text.splitlines()
+        out_of_scope = False
+        for index, line in enumerate(lines):
+            stripped = line.strip()
+            normalized_line = line.casefold()
+            if "вне объема" in normalized_line or "не делаем" in normalized_line:
+                out_of_scope = True
+            elif "внутри объема" in normalized_line or "делаем" in normalized_line:
+                out_of_scope = False
+            elif line.startswith("## ") and "границы объема" not in normalized_line:
+                out_of_scope = False
+            elif stripped in SPECIFICATION_MARKERS and stripped != "Границы объема":
+                out_of_scope = False
+
+            for marker in SCOPE_CREEP_MARKERS:
+                if marker.casefold() not in normalized_line:
+                    continue
+                if self.scope_marker_is_confirmed(
+                    marker,
+                    lines,
+                    index,
+                    input_text,
+                    clarification_log,
+                    out_of_scope,
+                ):
+                    continue
+                self.error(
+                    path,
+                    f"неподтвержденный scope-creep маркер `{marker}` без явного источника или out-of-scope фиксации",
+                )
+
+    def scope_marker_is_confirmed(
+        self,
+        marker: str,
+        lines: list[str],
+        index: int,
+        input_text: str,
+        clarification_log: str,
+        out_of_scope: bool,
+    ) -> bool:
+        context = lines[index]
+        context_folded = context.casefold()
+        marker_folded = marker.casefold()
+
+        if out_of_scope or "out-of-scope" in context_folded or "не входит" in context_folded or "вне объема" in context_folded:
+            return True
+
+        if re.search(r"Лог уточнений\s*(?::|->)\s*CL-\d+", context):
+            return True
+
+        if "Источник: Вход" in context:
+            return marker_folded in input_text.casefold()
+
+        return marker_folded in clarification_log.casefold() and re.search(r"\bCL-\d+\b", context)
 
     def validate_story_readiness(self) -> None:
         path = PRODUCT_FILES["story_readiness"]

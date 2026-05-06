@@ -13,6 +13,9 @@ class ValidateRunFixtureTest(unittest.TestCase):
     def test_valid_minimal_run_passes(self) -> None:
         self.assert_errors("valid-minimal-run", [])
 
+    def test_confirmed_scope_marker_passes(self) -> None:
+        self.assert_errors("valid-confirmed-scope-marker", [])
+
     def test_missing_service_report_fails(self) -> None:
         self.assert_errors(
             "invalid-missing-service-report",
@@ -66,6 +69,17 @@ class ValidateRunFixtureTest(unittest.TestCase):
                 (
                     "product/gap-risk-report.md",
                     "GAP-01: связанная история `US-01` имеет статус `Высокий`",
+                ),
+            ],
+        )
+
+    def test_unconfirmed_scope_creep_marker_fails(self) -> None:
+        self.assert_errors(
+            "invalid-unconfirmed-scope-creep",
+            [
+                (
+                    "product/specification.md",
+                    "неподтвержденный scope-creep маркер `Черновик` без явного источника или out-of-scope фиксации",
                 ),
             ],
         )
