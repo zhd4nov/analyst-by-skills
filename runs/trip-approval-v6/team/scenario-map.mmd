@@ -1,0 +1,22 @@
+flowchart TD
+    Start([Нужна командировка])
+    Draft[Сотрудник создает заявку: даты, город, цель, бюджет]
+    Submit[Сотрудник отправляет заявку]
+    Manager[Система направляет заявку руководителю из оргструктуры]
+    Review{Решение руководителя}
+    Approved[Статус: Согласована]
+    Rejected[Статус: Отклонена с причиной]
+    Accounting[Бухгалтерия видит согласованную заявку]
+    Preparing[Статус: Документы готовятся]
+    Ready[Статус: Документы готовы]
+    Edit[Сотрудник меняет даты, город, цель или бюджет]
+    OutOrg[Вне scope v1: руководитель не найден в оргструктуре]
+    OutCancel[Вне scope v1: действие отмены заявки]
+
+    Start --> Draft --> Submit --> Manager --> Review
+    Review -->|Согласовать| Approved --> Accounting --> Preparing --> Ready
+    Review -->|Отклонить с причиной| Rejected
+    Approved -->|Изменены ключевые поля| Edit --> Manager
+    Preparing -->|Изменены ключевые поля| Edit
+    Draft -.-> OutOrg
+    Draft -.-> OutCancel
