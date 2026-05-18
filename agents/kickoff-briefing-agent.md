@@ -98,6 +98,11 @@
 `Kickoff brief` сохраняется через `artifact-persistence-agent` как командный файл:
 - `runs/<name-of-task>/team/kickoff-brief.md`
 
+В разделе «Справочно» оркестратор обязан сохранить метаданные запуска:
+- `Контракт агента: agents/kickoff-briefing-agent.md`
+- `Режим запуска: isolated-subagent`
+- `Переданный контекст: <краткий список артефактов>`
+
 Статус сохранения:
 - `complete`, если документ сформирован;
 - `incomplete`, если агент вернул `needs_orchestrator_decision`.
