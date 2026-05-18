@@ -1,0 +1,44 @@
+flowchart TD
+  Start([Начало])
+  Draft["Сотрудник: создает или редактирует черновик заявки"]
+  SubmitChecks{"Проверки отправки"}
+  NoManager["Исключение: руководитель не найден, отправка блокируется с ошибкой"]
+  NoRate["Исключение: курс ЦБ РФ для USD/EUR недоступен, отправка блокируется"]
+  ManagerReview["Руководитель: рассматривает заявку"]
+  ManagerDecision{"Решение руководителя"}
+  ReturnedByManager["Возвращена сотруднику"]
+  RejectedByManager([Отклонена с обязательной причиной])
+  FinanceReview["Финансовый контролер: проводит финансовую проверку"]
+  FinanceDecision{"Решение финансового контролера"}
+  ReturnedByFinance["Возвращена сотруднику"]
+  RejectedByFinance([Отклонена с обязательной причиной])
+  Approved["Статус: Согласована"]
+  ProcurementTake["Специалист закупок: берет заявку в работу"]
+  InProcurement["Статус: В закупке"]
+  ProcurementDecision{"Результат закупки"}
+  CannotProcure([Отклонена: закупку невозможно выполнить, причина указана])
+  Completed([Завершена])
+
+  Start --> Draft
+  Draft --> SubmitChecks
+  SubmitChecks -->|проверки пройдены| ManagerReview
+  SubmitChecks -->|руководитель не найден| NoManager
+  SubmitChecks -->|курс недоступен для USD/EUR| NoRate
+
+  ManagerReview --> ManagerDecision
+  ManagerDecision -->|согласовать| FinanceReview
+  ManagerDecision -->|вернуть| ReturnedByManager
+  ManagerDecision -->|отклонить| RejectedByManager
+  ReturnedByManager --> Draft
+
+  FinanceReview --> FinanceDecision
+  FinanceDecision -->|согласовать| Approved
+  FinanceDecision -->|вернуть| ReturnedByFinance
+  FinanceDecision -->|отклонить| RejectedByFinance
+  ReturnedByFinance --> Draft
+
+  Approved --> ProcurementTake
+  ProcurementTake --> InProcurement
+  InProcurement --> ProcurementDecision
+  ProcurementDecision -->|завершить| Completed
+  ProcurementDecision -->|невозможно выполнить| CannotProcure
