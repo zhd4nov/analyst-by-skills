@@ -28,6 +28,11 @@ SERVICE_FILES = {
     "routing_decision": "service/routing-decision.md",
 }
 
+SERVICE_AGENT_CONTRACTS = {
+    "traceability_audit": "agents/traceability-auditor-agent.md",
+    "routing_decision": "agents/routing-guardian-agent.md",
+}
+
 SPECIFICATION_MARKERS = [
     "Контекст / Проблема",
     "Бизнес-цель",
@@ -313,6 +318,12 @@ class Validator:
     def validate_traceability_audit(self) -> None:
         path = SERVICE_FILES["traceability_audit"]
         text = self.read(path)
+        self.validate_agent_launch_metadata(
+            path,
+            text,
+            SERVICE_AGENT_CONTRACTS["traceability_audit"],
+            "# Отчет аудита трассируемости",
+        )
         if "Статус аудита: passed" not in text:
             self.error(path, "не найден успешный статус аудита `Статус аудита: passed`")
         if re.search(r"Статус аудита:\s*failed", text):
@@ -321,10 +332,41 @@ class Validator:
     def validate_routing_decision(self) -> None:
         path = SERVICE_FILES["routing_decision"]
         text = self.read(path)
+        self.validate_agent_launch_metadata(
+            path,
+            text,
+            SERVICE_AGENT_CONTRACTS["routing_decision"],
+            "# Отчет контроля маршрута",
+        )
         if not re.search(r"Итоговое решение маршрута:\s*allow", text):
             self.error(path, "не найдено итоговое решение маршрута `allow`")
         if not re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
             self.error(path, "найдены незакрытые блокировки маршрута")
+
+    def validate_agent_launch_metadata(
+        self,
+        path: str,
+        text: str,
+        contract_path: str,
+        report_heading: str,
+    ) -> None:
+        required = {
+            f"Контракт агента: {contract_path}": f"отсутствует метаданное запуска `Контракт агента: {contract_path}`",
+            "Режим запуска: isolated-subagent": "отсутствует метаданное запуска `Режим запуска: isolated-subagent`",
+            "Переданный контекст:": "отсутствует метаданное запуска `Переданный контекст`",
+        }
+        for block in self.report_blocks(text, report_heading):
+            for marker, message in required.items():
+                if marker not in block:
+                    self.error(path, message)
+
+    @staticmethod
+    def report_blocks(text: str, heading: str) -> list[str]:
+        starts = [match.start() for match in re.finditer(rf"(?m)^{re.escape(heading)}\s*$", text)]
+        if not starts:
+            return [text]
+        starts.append(len(text))
+        return [text[starts[index] : starts[index + 1]] for index in range(len(starts) - 1)]
 
     def validate_blocking_gap_story_readiness(self, path: str, gap_id: str, gap_block: str) -> None:
         statuses = self.story_readiness_statuses()

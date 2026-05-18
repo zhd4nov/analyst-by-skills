@@ -36,10 +36,7 @@
 - причина незавершенности, если статус `incomplete`
 
 ## Контракт выхода
-- метаданные запуска:
-  - `Контракт агента: agents/artifact-persistence-agent.md`
-  - `Режим запуска: isolated-subagent`
-  - `Переданный контекст: <краткий список артефактов для сохранения>`
+- метаданные вызова агента по формату `AGENTS.md`
 - `current_run_path`
 - список созданных или обновленных файлов
 - список еще не созданных файлов
@@ -72,10 +69,10 @@
 - `Отчет о пробелах и рисках` -> `product/gap-risk-report.md`
 
 Командные post-pipeline документы сохраняются только в `team/`:
-- `Kickoff brief` -> `team/kickoff-brief.md` (опционально, только после явного согласия пользователя)
-- `Delivery readiness pack` -> `team/delivery-readiness-pack.md` (обязательно, если пользователь согласился на `Kickoff brief`)
-- `Scenario map` -> `team/scenario-map.mmd` (обязательно как Mermaid-визуализация, если пользователь согласился на `Kickoff brief`)
-- `State model diagram` -> `team/state-model.mmd` (обязательно, если пользователь согласился на `Kickoff brief` и в спецификации есть подтвержденная модель состояний)
+- `Kickoff brief` -> `team/kickoff-brief.md` (автоматически после отказа от `scope-finalizer-agent` или после завершенного интервью с успешной повторной проверкой)
+- `Delivery readiness pack` -> `team/delivery-readiness-pack.md` (обязательно после успешно сформированного `Kickoff brief`)
+- `Scenario map` -> `team/scenario-map.mmd` (обязательно как Mermaid-визуализация после успешно сформированного `Kickoff brief`)
+- `State model diagram` -> `team/state-model.mmd` (обязательно после успешно сформированного `Kickoff brief`, если в спецификации есть подтвержденная модель состояний)
 
 `out-of-scope` решения не сохраняются отдельным файлом. Они фиксируются:
 - как источник решения в `product/clarification-log.md`, если решение получено в интервью или другом диалоге с пользователем;

@@ -24,6 +24,37 @@ class ValidateRunFixtureTest(unittest.TestCase):
             ],
         )
 
+    def test_missing_launch_metadata_fails(self) -> None:
+        self.assert_errors(
+            "invalid-missing-launch-metadata",
+            [
+                (
+                    "service/traceability-audit.md",
+                    "отсутствует метаданное запуска `Контракт агента: agents/traceability-auditor-agent.md`",
+                ),
+                (
+                    "service/traceability-audit.md",
+                    "отсутствует метаданное запуска `Режим запуска: isolated-subagent`",
+                ),
+                (
+                    "service/traceability-audit.md",
+                    "отсутствует метаданное запуска `Переданный контекст`",
+                ),
+                (
+                    "service/routing-decision.md",
+                    "отсутствует метаданное запуска `Контракт агента: agents/routing-guardian-agent.md`",
+                ),
+                (
+                    "service/routing-decision.md",
+                    "отсутствует метаданное запуска `Режим запуска: isolated-subagent`",
+                ),
+                (
+                    "service/routing-decision.md",
+                    "отсутствует метаданное запуска `Переданный контекст`",
+                ),
+            ],
+        )
+
     def test_story_without_source_fails(self) -> None:
         self.assert_errors(
             "invalid-story-without-source",
