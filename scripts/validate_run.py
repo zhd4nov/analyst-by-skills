@@ -33,6 +33,13 @@ SERVICE_AGENT_CONTRACTS = {
     "routing_decision": "agents/routing-guardian-agent.md",
 }
 
+CANONICAL_RELATIVE_PATHS = set(PRODUCT_FILES.values()) | set(SERVICE_FILES.values()) | {
+    "team/kickoff-brief.md",
+    "team/delivery-readiness-pack.md",
+    "team/scenario-map.mmd",
+    "team/state-model.mmd",
+}
+
 SPECIFICATION_MARKERS = [
     "Контекст / Проблема",
     "Бизнес-цель",
@@ -134,6 +141,19 @@ class Validator:
         if not self.run_path.is_dir():
             self.error(str(self.run_path), "путь прогона не является каталогом")
             return
+        if self.run_path.name == "runs":
+            self.error(
+                str(self.run_path),
+                "передан корневой каталог `runs/`; ожидается отдельный каталог прогона `runs/<run-name>`",
+            )
+            return
+        for relative_path in CANONICAL_RELATIVE_PATHS:
+            root_artifact_path = self.run_path / Path(relative_path).name
+            if root_artifact_path.is_file():
+                self.error(
+                    root_artifact_path.name,
+                    "канонический артефакт лежит в корне прогона, а не в `product/`, `service/` или `team/`",
+                )
         for dirname in ("product", "service"):
             if not (self.run_path / dirname).is_dir():
                 self.error(dirname, f"отсутствует каталог `{dirname}/`")

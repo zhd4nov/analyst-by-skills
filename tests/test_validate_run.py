@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 from scripts.validate_run import Validator
@@ -113,6 +114,41 @@ class ValidateRunFixtureTest(unittest.TestCase):
                     "неподтвержденный scope-creep маркер `Черновик` без явного источника или out-of-scope фиксации",
                 ),
             ],
+        )
+
+    def test_runs_root_is_not_a_run_directory(self) -> None:
+        with TemporaryDirectory() as directory:
+            runs_root = Path(directory) / "runs"
+            runs_root.mkdir()
+
+            findings = Validator(runs_root).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertEqual(
+            [
+                (
+                    str(runs_root),
+                    "передан корневой каталог `runs/`; ожидается отдельный каталог прогона `runs/<run-name>`",
+                ),
+            ],
+            actual,
+        )
+
+    def test_canonical_artifact_in_run_root_fails(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "purchase-approval"
+            run_path.mkdir()
+            (run_path / "input.md").write_text("Вход", encoding="utf-8")
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            (
+                "input.md",
+                "канонический артефакт лежит в корне прогона, а не в `product/`, `service/` или `team/`",
+            ),
+            actual,
         )
 
     def assert_errors(self, fixture_name: str, expected: list[tuple[str, str]]) -> None:

@@ -190,6 +190,9 @@ Post-pipeline агенты:
 Базовый маршрут:
 
 1. `artifact-persistence-agent(create_run)` сохраняет `Вход`.
+   - `create_run` обязан сначала создать отдельный каталог текущего прогона `runs/<name-of-task>/` или `runs/<name-of-task>-vN/`, вернуть `current_run_path` и сохранить `Вход` только как `current_run_path/product/input.md`.
+   - Запись артефактов напрямую в `runs/`, `runs/product/`, `runs/service/` или `runs/team/` запрещена и не считается успешной фиксацией.
+   - Все последующие сохранения выполняются только через `artifact-persistence-agent(update_run)` с тем же `current_run_path`; потеря `current_run_path` блокирует downstream-переход.
 2. `requirements-elicitor`, если вход сырой, неполный, неоднозначный или есть существенные пробелы.
 3. `traceability-auditor-agent` и `routing-guardian-agent` перед переходом к структурированию, если появились новые downstream-артефакты.
 4. `spec-structurer`.
