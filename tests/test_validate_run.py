@@ -17,6 +17,9 @@ class ValidateRunFixtureTest(unittest.TestCase):
     def test_confirmed_scope_marker_passes(self) -> None:
         self.assert_errors("valid-confirmed-scope-marker", [])
 
+    def test_historical_route_block_can_be_closed_by_allow(self) -> None:
+        self.assert_errors("valid-historical-route", [])
+
     def test_missing_service_report_fails(self) -> None:
         self.assert_errors(
             "invalid-missing-service-report",
@@ -90,6 +93,33 @@ class ValidateRunFixtureTest(unittest.TestCase):
             [
                 ("service/routing-decision.md", "не найдено итоговое решение маршрута `allow`"),
                 ("service/routing-decision.md", "найдены незакрытые блокировки маршрута"),
+            ],
+        )
+
+    def test_missing_audit_history_fails(self) -> None:
+        self.assert_errors(
+            "invalid-missing-audit-history",
+            [
+                ("service/traceability-audit.md", "не найдено ни одного блока аудита `## Аудит`"),
+            ],
+        )
+
+    def test_missing_route_history_fails(self) -> None:
+        self.assert_errors(
+            "invalid-missing-route-history",
+            [
+                ("service/routing-decision.md", "не найдено ни одного блока проверки маршрута"),
+            ],
+        )
+
+    def test_unclosed_route_block_fails(self) -> None:
+        self.assert_errors(
+            "invalid-unclosed-route-block",
+            [
+                (
+                    "service/routing-decision.md",
+                    "история маршрута содержит незакрытый `block` без последующего `allow`",
+                ),
             ],
         )
 

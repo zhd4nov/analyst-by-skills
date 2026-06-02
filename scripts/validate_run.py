@@ -348,6 +348,7 @@ class Validator:
             self.error(path, "не найден успешный статус аудита `Статус аудита: passed`")
         if re.search(r"Статус аудита:\s*failed", text):
             self.error(path, "найден failed-аудит трассируемости")
+        self.validate_traceability_audit_history(path, text)
 
     def validate_routing_decision(self) -> None:
         path = SERVICE_FILES["routing_decision"]
@@ -362,6 +363,46 @@ class Validator:
             self.error(path, "не найдено итоговое решение маршрута `allow`")
         if not re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
             self.error(path, "найдены незакрытые блокировки маршрута")
+        self.validate_routing_history(path, text)
+
+    def validate_traceability_audit_history(self, path: str, text: str) -> None:
+        audit_blocks = self.prefixed_blocks(text, "Аудит")
+        if not audit_blocks and len(self.report_blocks(text, "# Отчет аудита трассируемости")) > 1:
+            audit_blocks = self.report_blocks(text, "# Отчет аудита трассируемости")
+        if not audit_blocks:
+            self.error(path, "не найдено ни одного блока аудита `## Аудит`")
+            return
+        for index, block in enumerate(audit_blocks, start=1):
+            for marker in (
+                "Цель проверки:",
+                "Текущий этап:",
+                "Предложенный следующий этап:",
+                "Статус аудита:",
+            ):
+                if marker not in block:
+                    self.error(path, f"Аудит {index}: отсутствует поле `{marker}`")
+
+    def validate_routing_history(self, path: str, text: str) -> None:
+        route_blocks = self.route_history_blocks(text)
+        if not route_blocks:
+            self.error(path, "не найдено ни одного блока проверки маршрута")
+            return
+        unresolved_blocks = 0
+        for index, block in enumerate(route_blocks, start=1):
+            for marker in ("Текущий этап:", "Предложенный следующий этап:"):
+                if marker not in block:
+                    self.error(path, f"Проверка маршрута {index}: отсутствует поле `{marker}`")
+            if "Блокировка маршрута" in block:
+                unresolved_blocks += 1
+                if "Причина:" not in block:
+                    self.error(path, f"Проверка маршрута {index}: отсутствует поле `Причина:`")
+                continue
+            if "Решение:" not in block:
+                self.error(path, f"Проверка маршрута {index}: отсутствует поле `Решение:`")
+            if re.search(r"Решение:\s*allow", block):
+                unresolved_blocks = 0
+        if unresolved_blocks and re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
+            self.error(path, "история маршрута содержит незакрытый `block` без последующего `allow`")
 
     def validate_agent_launch_metadata(
         self,
@@ -385,6 +426,24 @@ class Validator:
         starts = [match.start() for match in re.finditer(rf"(?m)^{re.escape(heading)}\s*$", text)]
         if not starts:
             return [text]
+        starts.append(len(text))
+        return [text[starts[index] : starts[index + 1]] for index in range(len(starts) - 1)]
+
+    @staticmethod
+    def prefixed_blocks(text: str, heading_prefix: str) -> list[str]:
+        pattern = re.compile(rf"(?m)^(?:#+\s+)?{re.escape(heading_prefix)}\b.*$")
+        starts = [match.start() for match in pattern.finditer(text)]
+        if not starts:
+            return []
+        starts.append(len(text))
+        return [text[starts[index] : starts[index + 1]] for index in range(len(starts) - 1)]
+
+    @staticmethod
+    def route_history_blocks(text: str) -> list[str]:
+        pattern = re.compile(r"(?m)^(?:#+\s+)?(?:Проверка\b|Проверка маршрута\b|Блокировка маршрута\b).*$")
+        starts = [match.start() for match in pattern.finditer(text)]
+        if not starts:
+            return []
         starts.append(len(text))
         return [text[starts[index] : starts[index + 1]] for index in range(len(starts) - 1)]
 

@@ -10,6 +10,8 @@
 Статус аудита: passed
 
 Цель проверки: before_next_stage
+Текущий этап: service-gate
+Предложенный следующий этап: downstream-transition
 
 Проверенные артефакты:
 - `Вход`
@@ -41,6 +43,8 @@
 Статус аудита: passed
 
 Цель проверки: before_final_response
+Текущий этап: service-gate
+Предложенный следующий этап: downstream-transition
 
 Проверенные артефакты:
 - `Вход`
@@ -74,6 +78,8 @@
 Статус аудита: passed
 
 Цель проверки: before_next_stage
+Текущий этап: service-gate
+Предложенный следующий этап: downstream-transition
 
 Проверенные артефакты:
 - `Пользовательские истории`
@@ -104,6 +110,8 @@
 Статус аудита: passed
 
 Цель проверки: before_next_stage
+Текущий этап: service-gate
+Предложенный следующий этап: downstream-transition
 
 Проверенные артефакты:
 - `Спецификация`
@@ -135,6 +143,8 @@
 Статус аудита: passed
 
 Цель проверки: before_next_stage
+Текущий этап: service-gate
+Предложенный следующий этап: downstream-transition
 
 Проверенные артефакты:
 - `Вход`
