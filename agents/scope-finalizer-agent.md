@@ -58,7 +58,7 @@
 
 ## Контракт выхода
 - метаданные вызова агента по формату `AGENTS.md`
-- `interview_status`:
+- `post_pipeline_signal` / `interview_status`:
   - `needs_user_answer`
   - `completed`
 - `intro_message` (цель + тема + правило границ, если агенту нужно повторить рамку перед первым содержательным вопросом)

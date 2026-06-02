@@ -83,6 +83,33 @@
 
 ---
 
+## Словарь Сигналов И Решений
+Типы сигналов нельзя смешивать между слоями маршрута.
+
+`profile_skill_signal` — сигнал профильного скилла:
+- `complete`;
+- `needs_user_answer`;
+- `needs_quality_rework`.
+
+`service_agent_status` — статус служебного агента:
+- `passed` / `failed` для `traceability-auditor-agent`;
+- `complete` / `incomplete` для `artifact-persistence-agent`, если речь о файловой фиксации.
+
+`route_decision` — решение `routing-guardian-agent`:
+- `allow`;
+- `block`.
+
+`post_pipeline_signal` — сигнал post-pipeline агента:
+- `completed`;
+- `complete`;
+- `needs_user_answer`;
+- `needs_orchestrator_decision`;
+- `not_applicable`.
+
+`completed`, `needs_orchestrator_decision` и `not_applicable` не являются `profile_skill_signal` и не должны использоваться для маршрутизации профильных скиллов.
+
+---
+
 ## Служебные И Post-Pipeline Агенты
 Обязательные служебные агенты ядра:
 - `artifact-persistence-agent` — файловая фиксация артефактов текущего прогона;
