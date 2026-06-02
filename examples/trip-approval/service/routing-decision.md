@@ -4,7 +4,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: состояние артефактов, последний аудит трассируемости, статус файловой фиксации, предложенный переход
+Переданный контекст: compact route envelope; artifact_statuses; open_questions_delta; last_service_statuses; proposed_next_stage
 
 
 Итоговое решение маршрута: allow

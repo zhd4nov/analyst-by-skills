@@ -4,7 +4,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: Вход, Лог уточнений, Канонические правила, Спецификация, Пользовательские истории, Отчет о пробелах и рисках
+Переданный контекст: compact audit envelope; changed_artifacts; source_refs; last_service_statuses
 
 
 Статус аудита: passed
@@ -38,7 +38,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: Вход, Лог уточнений, Канонические правила, Спецификация, Пользовательские истории, Отчет о пробелах и рисках
+Переданный контекст: compact audit envelope; changed_artifacts; source_refs; last_service_statuses
 
 Статус аудита: passed
 
@@ -73,7 +73,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: Вход, Лог уточнений, Канонические правила, Спецификация, Пользовательские истории, Отчет о пробелах и рисках
+Переданный контекст: compact audit envelope; changed_artifacts; source_refs; last_service_statuses
 
 Статус аудита: passed
 
@@ -105,7 +105,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: Вход, Лог уточнений, Канонические правила, Спецификация, Пользовательские истории, Отчет о пробелах и рисках
+Переданный контекст: compact audit envelope; changed_artifacts; source_refs; last_service_statuses
 
 Статус аудита: passed
 
@@ -138,7 +138,7 @@
 
 Режим запуска: isolated-subagent
 
-Переданный контекст: Вход, Лог уточнений, Канонические правила, Спецификация, Пользовательские истории, Отчет о пробелах и рисках
+Переданный контекст: compact audit envelope; changed_artifacts; source_refs; last_service_statuses
 
 Статус аудита: passed
 
