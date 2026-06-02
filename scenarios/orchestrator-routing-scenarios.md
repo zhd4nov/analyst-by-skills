@@ -28,7 +28,9 @@ automatic team package: kickoff-briefing-agent -> delivery-readiness-agent
 - командные post-pipeline документы сохраняются в `team/`;
 - `product/`, `service/` и `team/` создаются только внутри отдельного `current_run_path`, а не напрямую в `runs/`;
 - каждый вызов `agents/*.md` выполняется раннером-оркестратором как отдельный сабагент с изолированным контекстом;
-- в контекст сабагента передаются только его контракт и минимально релевантные артефакты текущего прогона;
+- в контекст сабагента передаются только его контракт и compact context envelope с минимально релевантными артефактами, source anchors и service statuses;
+- `traceability-auditor-agent` получает проверяемые downstream-артефакты и source anchors, а не весь комплект прогона по умолчанию;
+- `routing-guardian-agent` получает compact route envelope и проверяемое основание перехода, а не полные продуктовые артефакты;
 - downstream-переход выполняется только после успешной фиксации, обязательного аудита и route-control;
 - ответы `scope-finalizer-agent` не создают отдельный файл, а фиксируются в `product/clarification-log.md` и пересобранных downstream-артефактах;
 - исторические `block` допустимы в `service/routing-decision.md`, если итоговое решение `allow` и незакрытых блокировок нет.
