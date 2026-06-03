@@ -33,12 +33,21 @@ SERVICE_AGENT_CONTRACTS = {
     "routing_decision": "agents/routing-guardian-agent.md",
 }
 
-CANONICAL_RELATIVE_PATHS = set(PRODUCT_FILES.values()) | set(SERVICE_FILES.values()) | {
-    "team/kickoff-brief.md",
-    "team/delivery-readiness-pack.md",
-    "team/scenario-map.mmd",
-    "team/state-model.mmd",
+TEAM_FILES = {
+    "kickoff_brief": "team/kickoff-brief.md",
+    "delivery_readiness_pack": "team/delivery-readiness-pack.md",
+    "scenario_map": "team/scenario-map.mmd",
+    "state_model": "team/state-model.mmd",
 }
+
+TEAM_AGENT_CONTRACTS = {
+    "kickoff_brief": "agents/kickoff-briefing-agent.md",
+    "delivery_readiness_pack": "agents/delivery-readiness-agent.md",
+    "scenario_map": "agents/delivery-readiness-agent.md",
+    "state_model": "agents/delivery-readiness-agent.md",
+}
+
+CANONICAL_RELATIVE_PATHS = set(PRODUCT_FILES.values()) | set(SERVICE_FILES.values()) | set(TEAM_FILES.values())
 
 SPECIFICATION_MARKERS = [
     "Контекст / Проблема",
@@ -122,16 +131,20 @@ class Validator:
     def validate(self) -> list[Finding]:
         self.validate_run_shape()
         if self.has_required_files(PRODUCT_FILES):
+            self.validate_artifact_statuses(PRODUCT_FILES)
             self.validate_clarification_log()
             self.validate_canonical_rules()
             self.validate_specification()
             self.validate_user_stories()
+            self.validate_open_questions_closed()
             self.validate_scope_creep_markers()
             self.validate_story_readiness()
             self.validate_gap_report()
         if self.has_required_files(SERVICE_FILES):
+            self.validate_artifact_statuses(SERVICE_FILES)
             self.validate_traceability_audit()
             self.validate_routing_decision()
+        self.validate_post_pipeline_package_if_present()
         return self.findings
 
     def validate_run_shape(self) -> None:
@@ -166,6 +179,13 @@ class Validator:
 
     def has_required_files(self, files: dict[str, str]) -> bool:
         return all(self.exists(path) for path in files.values())
+
+
+    def validate_artifact_statuses(self, files: dict[str, str]) -> None:
+        for relative_path in files.values():
+            text = self.read(relative_path)
+            if re.search(r"Статус:\s*(incomplete|not_started|незавершен|не завершен)", text, re.IGNORECASE):
+                self.error(relative_path, "финальный прогон содержит незавершенный статус артефакта")
 
     def validate_clarification_log(self) -> None:
         path = PRODUCT_FILES["clarification_log"]
@@ -234,6 +254,26 @@ class Validator:
             for cr_id in sorted(cr_to_stories):
                 if cr_id not in text:
                     self.error(path, f"правило `{cr_id}` не отражено в покрытии канонических правил")
+
+
+    def validate_open_questions_closed(self) -> None:
+        path = PRODUCT_FILES["open_questions"]
+        text = self.read(path)
+        content_lines = []
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or re.match(r"Статус:\s*complete", line, re.IGNORECASE):
+                continue
+            content_lines.append(line)
+        if not content_lines:
+            self.error(path, "финальная агрегация требует явной фиксации отсутствия открытых вопросов")
+            return
+        allowed = re.compile(r"^(?:[-—]\s*)?(?:нет|нет\.|отсутствуют|отсутствуют\.|не выявлено|не выявлено\.)$", re.IGNORECASE)
+        for line in content_lines:
+            if allowed.match(line):
+                continue
+            self.error(path, "финальная агрегация невозможна: есть незакрытые открытые вопросы")
+            break
 
     def validate_scope_creep_markers(self) -> None:
         input_text = self.read(PRODUCT_FILES["input"])
@@ -404,6 +444,26 @@ class Validator:
         if unresolved_blocks and re.search(r"Незакрытые блокировки:\s*нет", text, re.IGNORECASE):
             self.error(path, "история маршрута содержит незакрытый `block` без последующего `allow`")
 
+
+    def validate_post_pipeline_package_if_present(self) -> None:
+        existing_team_files = [path for path in TEAM_FILES.values() if self.exists(path)]
+        if not existing_team_files:
+            return
+        for key in ("kickoff_brief", "delivery_readiness_pack"):
+            relative_path = TEAM_FILES[key]
+            if not self.exists(relative_path):
+                self.error(relative_path, "post-pipeline пакет начат, но отсутствует обязательный командный артефакт")
+        for key, relative_path in TEAM_FILES.items():
+            if not self.exists(relative_path):
+                continue
+            text = self.read(relative_path)
+            self.validate_agent_launch_metadata(
+                relative_path,
+                text,
+                TEAM_AGENT_CONTRACTS[key],
+                "",
+            )
+
     def validate_agent_launch_metadata(
         self,
         path: str,
@@ -423,6 +483,8 @@ class Validator:
 
     @staticmethod
     def report_blocks(text: str, heading: str) -> list[str]:
+        if not heading:
+            return [text]
         starts = [match.start() for match in re.finditer(rf"(?m)^{re.escape(heading)}\s*$", text)]
         if not starts:
             return [text]
