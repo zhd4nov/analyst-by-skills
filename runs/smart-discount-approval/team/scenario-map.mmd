@@ -1,0 +1,41 @@
+flowchart TD
+  Start([Начало])
+  Create["Менеджер продаж: создает запрос на скидку"]
+  Draft["Статус: Черновик"]
+  Submit["Менеджер продаж: отправляет запрос на согласование"]
+  Route{"Процент скидки"}
+  Manager["Руководитель отдела продаж: рассматривает запрос"]
+  Finance["Финансовый контролер: выполняет финансовую проверку"]
+  Commercial["Коммерческий директор: рассматривает запрос"]
+  Decision{"Решение согласующего"}
+  Reason["Выбрана причина одобрения или отказа"]
+  Approved([Одобрено])
+  Rejected([Отклонено])
+  Sla["SLA-подсветка и уведомления"]
+  Expired([Истек срок])
+  Journal["Журнал изменений фиксирует действия и статусы"]
+
+  Start --> Create
+  Create --> Draft
+  Draft --> Submit
+  Submit --> Route
+  Route -->|"до 5%"| Manager
+  Route -->|"5-12%"| Finance
+  Route -->|"выше 12%"| Commercial
+  Manager --> Decision
+  Finance --> Decision
+  Commercial --> Decision
+  Decision -->|"одобрить"| Reason
+  Decision -->|"отклонить"| Reason
+  Reason -->|"одобрение"| Approved
+  Reason -->|"отказ"| Rejected
+  Manager -.-> Sla
+  Finance -.-> Sla
+  Commercial -.-> Sla
+  Sla --> Expired
+  Create -.-> Journal
+  Submit -.-> Journal
+  Decision -.-> Journal
+  Approved -.-> Journal
+  Rejected -.-> Journal
+  Expired -.-> Journal
