@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -127,6 +128,7 @@ class ValidateRunFixtureTest(unittest.TestCase):
         self.assert_errors(
             "invalid-blocking-gap-high-readiness",
             [
+                ("product/gap-risk-report.md", "финальный прогон содержит незавершенный статус артефакта"),
                 ("product/gap-risk-report.md", "GAP-01: открыт блокирующий пробел"),
                 (
                     "product/gap-risk-report.md",
@@ -144,6 +146,68 @@ class ValidateRunFixtureTest(unittest.TestCase):
                     "неподтвержденный scope-creep маркер `Черновик` без явного источника или out-of-scope фиксации",
                 ),
             ],
+        )
+
+    def test_open_questions_in_final_run_fail(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "run-with-open-question"
+            shutil.copytree(FIXTURES_DIR / "valid-minimal-run", run_path)
+            (run_path / "product" / "open-questions.md").write_text(
+                "# Открытые вопросы\n\nСтатус: complete\n\n- Как определяется исполнитель заявки?\n",
+                encoding="utf-8",
+            )
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            (
+                "product/open-questions.md",
+                "финальная агрегация невозможна: есть незакрытые открытые вопросы",
+            ),
+            actual,
+        )
+
+    def test_incomplete_final_artifact_status_fails(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "run-with-incomplete-artifact"
+            shutil.copytree(FIXTURES_DIR / "valid-minimal-run", run_path)
+            story_readiness_path = run_path / "product" / "story-readiness.md"
+            story_readiness_path.write_text(
+                story_readiness_path.read_text(encoding="utf-8").replace("Статус: complete", "Статус: incomplete"),
+                encoding="utf-8",
+            )
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            ("product/story-readiness.md", "финальный прогон содержит незавершенный статус артефакта"),
+            actual,
+        )
+
+    def test_partial_post_pipeline_package_fails(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "run-with-partial-team-package"
+            shutil.copytree(FIXTURES_DIR / "valid-minimal-run", run_path)
+            team_path = run_path / "team"
+            team_path.mkdir()
+            (team_path / "kickoff-brief.md").write_text(
+                "# Kickoff brief\n\nКонтракт агента: agents/kickoff-briefing-agent.md\n\n"
+                "Режим запуска: isolated-subagent\n\n"
+                "Переданный контекст: compact team envelope\n",
+                encoding="utf-8",
+            )
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            (
+                "team/delivery-readiness-pack.md",
+                "post-pipeline пакет начат, но отсутствует обязательный командный артефакт",
+            ),
+            actual,
         )
 
     def test_runs_root_is_not_a_run_directory(self) -> None:
