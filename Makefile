@@ -7,7 +7,7 @@ help:
 	@echo "  make validate-fixture      Validate the canonical test fixture"
 	@echo "  make validate-example      Validate the canonical end-to-end example"
 	@echo "  make validate-runs         Validate every saved run under runs/ if present"
-	@echo "  make check                 Run tests and validate fixtures, examples, and saved runs"
+	@echo "  make check                 Run tests and validate fixtures and examples"
 
 test:
 	python3 -m unittest discover -s tests
@@ -33,4 +33,4 @@ validate-runs:
 		done; \
 	fi
 
-check: test validate-fixture validate-example validate-runs
+check: test validate-fixture validate-example

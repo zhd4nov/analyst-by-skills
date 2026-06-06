@@ -168,6 +168,65 @@ class ValidateRunFixtureTest(unittest.TestCase):
             actual,
         )
 
+    def test_gap_report_references_empty_open_questions_fails(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "run-with-gap-link-to-empty-open-questions"
+            shutil.copytree(FIXTURES_DIR / "valid-minimal-run", run_path)
+            (run_path / "product" / "gap-risk-report.md").write_text(
+                "# Отчет о пробелах и рисках\n\n"
+                "Статус: complete\n\n"
+                "## Пробел\n"
+                "ID: GAP-01\n"
+                "Статус пробела: открыт\n"
+                "Источник пробела\n"
+                "- Спецификация: Валидационные правила\n"
+                "- Финальная фиксация открытых вопросов: product/open-questions.md\n"
+                "Область: обязательность полей\n"
+                "Описание пробела: Не определено, какие поля обязательны.\n"
+                "Почему это важно: Без правила нельзя проверить форму.\n"
+                "Риск: средний\n"
+                "Влияние: Возможна доработка валидации.\n"
+                "Что нужно уточнить: Перечень обязательных полей.\n"
+                "Предлагаемое решение: Получить решение владельца продукта.\n"
+                "Блокирует разработку: нет\n",
+                encoding="utf-8",
+            )
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            (
+                "product/gap-risk-report.md",
+                "GAP-01: ссылка на `product/open-questions.md` недопустима, потому что открытые вопросы явно отсутствуют",
+            ),
+            actual,
+        )
+
+    def test_assumptions_claim_no_dialog_with_cl_entries_fails(self) -> None:
+        with TemporaryDirectory() as directory:
+            run_path = Path(directory) / "run-with-invalid-assumptions-note"
+            shutil.copytree(FIXTURES_DIR / "valid-minimal-run", run_path)
+            (run_path / "product" / "assumptions.md").write_text(
+                "# Допущения\n\n"
+                "Статус: complete\n\n"
+                "Нет.\n\n"
+                "Неподтвержденные рабочие гипотезы не фиксировались как допущения, "
+                "потому что уточняющий диалог в текущем прогоне не проводился.\n",
+                encoding="utf-8",
+            )
+
+            findings = Validator(run_path).validate()
+            actual = [(finding.path, finding.message) for finding in findings if finding.level == "ERROR"]
+
+        self.assertIn(
+            (
+                "product/assumptions.md",
+                "артефакт противоречит `Логу уточнений`: указано, что уточняющий диалог не проводился",
+            ),
+            actual,
+        )
+
     def test_incomplete_final_artifact_status_fails(self) -> None:
         with TemporaryDirectory() as directory:
             run_path = Path(directory) / "run-with-incomplete-artifact"

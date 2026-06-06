@@ -44,6 +44,30 @@ class SystemContractTest(unittest.TestCase):
                 text = (ROOT_DIR / "agents" / filename).read_text(encoding="utf-8")
                 self.assertIn(marker, text)
 
+    def test_profile_skills_guard_against_solution_bias(self) -> None:
+        required = {
+            "requirements-elicitor": [
+                "UI/UX-предложение",
+                "техническое предложение",
+                "не считаются подтвержденными требованиями",
+                "Канбан, колонки, цвета, drag-and-drop, кнопки",
+                "API, Kafka, DWH, PostgreSQL, Camunda, rule engine",
+            ],
+            "spec-structurer": [
+                "UI/UX-предложение",
+                "техническое предложение",
+                "не считаются подтвержденными требованиями",
+                "Канбан, колонки, цвета, drag-and-drop, кнопки",
+                "API, Kafka, DWH, PostgreSQL, Camunda, rule engine",
+            ],
+        }
+
+        for skill_name, markers in required.items():
+            with self.subTest(skill_name=skill_name):
+                text = (ROOT_DIR / "skills" / skill_name / "SKILL.md").read_text(encoding="utf-8")
+                for marker in markers:
+                    self.assertIn(marker, text)
+
 
 if __name__ == "__main__":
     unittest.main()

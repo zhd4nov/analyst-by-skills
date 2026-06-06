@@ -133,6 +133,7 @@ class Validator:
         if self.has_required_files(PRODUCT_FILES):
             self.validate_artifact_statuses(PRODUCT_FILES)
             self.validate_clarification_log()
+            self.validate_assumptions_consistency()
             self.validate_canonical_rules()
             self.validate_specification()
             self.validate_user_stories()
@@ -203,6 +204,18 @@ class Validator:
                 if marker not in block:
                     self.error(path, f"{block_id}: отсутствует поле `{marker}`")
 
+    def validate_assumptions_consistency(self) -> None:
+        path = PRODUCT_FILES["assumptions"]
+        text = self.read(path)
+        clarification_log = self.read(PRODUCT_FILES["clarification_log"])
+        if not self.ids(clarification_log, "CL"):
+            return
+        if re.search(r"уточняющ\w*\s+диалог\w*[^.\n]*не\s+проводил", text, re.IGNORECASE):
+            self.error(
+                path,
+                "артефакт противоречит `Логу уточнений`: указано, что уточняющий диалог не проводился",
+            )
+
     def validate_canonical_rules(self) -> None:
         path = PRODUCT_FILES["canonical_rules"]
         text = self.read(path)
@@ -259,18 +272,12 @@ class Validator:
     def validate_open_questions_closed(self) -> None:
         path = PRODUCT_FILES["open_questions"]
         text = self.read(path)
-        content_lines = []
-        for raw_line in text.splitlines():
-            line = raw_line.strip()
-            if not line or line.startswith("#") or re.match(r"Статус:\s*complete", line, re.IGNORECASE):
-                continue
-            content_lines.append(line)
+        content_lines = self.open_question_content_lines(text)
         if not content_lines:
             self.error(path, "финальная агрегация требует явной фиксации отсутствия открытых вопросов")
             return
-        allowed = re.compile(r"^(?:[-—]\s*)?(?:нет|нет\.|отсутствуют|отсутствуют\.|не выявлено|не выявлено\.)$", re.IGNORECASE)
         for line in content_lines:
-            if allowed.match(line):
+            if self.open_question_empty_line(line):
                 continue
             self.error(path, "финальная агрегация невозможна: есть незакрытые открытые вопросы")
             break
@@ -371,9 +378,44 @@ class Validator:
             for marker in GAP_REQUIRED_MARKERS:
                 if marker not in block:
                     self.error(path, f"{gap_id}: отсутствует поле или раздел `{marker}`")
+            if self.gap_references_empty_open_questions(block):
+                self.error(
+                    path,
+                    f"{gap_id}: ссылка на `product/open-questions.md` недопустима, потому что открытые вопросы явно отсутствуют",
+                )
             if self.is_open_blocking_gap(block):
                 self.error(path, f"{gap_id}: открыт блокирующий пробел")
                 self.validate_blocking_gap_story_readiness(path, gap_id, block)
+
+    def gap_references_empty_open_questions(self, gap_block: str) -> bool:
+        if "product/open-questions.md" not in gap_block:
+            return False
+        return self.open_questions_explicitly_empty()
+
+    def open_questions_explicitly_empty(self) -> bool:
+        text = self.read(PRODUCT_FILES["open_questions"])
+        content_lines = self.open_question_content_lines(text)
+        return bool(content_lines) and all(self.open_question_empty_line(line) for line in content_lines)
+
+    @staticmethod
+    def open_question_content_lines(text: str) -> list[str]:
+        content_lines = []
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or re.match(r"Статус:\s*complete", line, re.IGNORECASE):
+                continue
+            content_lines.append(line)
+        return content_lines
+
+    @staticmethod
+    def open_question_empty_line(line: str) -> bool:
+        return bool(
+            re.match(
+                r"^(?:[-—]\s*)?(?:нет|нет\.|отсутствуют|отсутствуют\.|не выявлено|не выявлено\.)$",
+                line,
+                re.IGNORECASE,
+            )
+        )
 
     def validate_traceability_audit(self) -> None:
         path = SERVICE_FILES["traceability_audit"]
